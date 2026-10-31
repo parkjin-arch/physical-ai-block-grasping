@@ -8,7 +8,8 @@ Genesisシミュレータ上のFranka Emika Pandaに、自然言語の指示文�
 - **Stage1**: 固定された1個のキューブをピック&リフトする（AIなし、動作の土台）
 - **Stage2**: 赤・青・緑の3キューブをランダム配置し、自然言語の指示文（例:「青いブロックを取って」）
   をLLMに解釈させ、該当するキューブをピック&プレースする
-- **Stage3**: （実装予定）シミュレータの正解座標を使わず、カメラ画像からキューブ位置を推定する
+- **Stage3**: シミュレータの正解座標を使わず、固定俯瞰カメラのRGB-D画像から色セグメンテーション
+  でキューブ位置を推定し、その推定座標だけでLLM判定・ピック&プレースまで行う
 
 ## セットアップ
 
@@ -64,6 +65,9 @@ C:\dev\venvs\genesis_env\Scripts\python.exe main.py --stage 2 --no-viewer
 
 # Stage2: 3つの指示を連続実行するデモモード
 C:\dev\venvs\genesis_env\Scripts\python.exe main.py --stage 2 --no-viewer --demo
+
+# Stage3: カメラ推定座標だけを使ったデモモード
+C:\dev\venvs\genesis_env\Scripts\python.exe main.py --stage 3 --no-viewer --demo
 ```
 
 `--no-viewer`を外すとGenesisのビューアがリアルタイム表示されます（動画は`--no-viewer`
@@ -75,11 +79,13 @@ C:\dev\venvs\genesis_env\Scripts\python.exe main.py --stage 2 --no-viewer --demo
 README.md
 requirements.txt
 src/
-  scene.py         # シーン構築 (build_scene: Stage1, build_scene_multi: Stage2)
+  scene.py         # シーン構築 (build_scene: Stage1, build_scene_multi: Stage2/3)
   robot.py         # move_to, open_gripper, close_gripper, pick_and_place
   llm_planner.py   # 指示文 -> ターゲット色選択 (Ollama/Anthropic)
+  perception.py    # RGB-Dからの位置推定 (Stage3)
   main.py          # デモ実行と録画
-outputs/           # 動画・ログ（.gitignoreで大きなファイルは除外）
+outputs/           # 動画・ログ（.gitignoreで大きなファイルは除外）。
+                    # stage3_perception_errors.csvは精度評価の証跡として同梱
 ```
 
 ## 技術的な工夫
@@ -92,6 +98,9 @@ outputs/           # 動画・ログ（.gitignoreで大きなファイルは除�
   (Ollama)だけでAI推論を完結できるようにした
 - LLMの応答はJSON形式のみを期待するが、余計な文字列が混じっても拾えるよう正規表現で
   JSONブロックを抽出し、パース失敗やあり得ない色が返った場合はリトライする
+- Stage3では、RGB-D画像の深度がキューブの「上面」を捉える点に注意し、真下視点の
+  俯瞰カメラという条件下でキューブ高さの半分だけ補正することで、中心座標の推定誤差を
+  約2cmから1〜4mm程度まで改善した（`outputs/stage3_perception_errors.csv`に記録）
 
 ## 動画
 
