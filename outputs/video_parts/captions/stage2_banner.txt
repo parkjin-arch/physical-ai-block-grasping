@@ -1,0 +1,1 @@
+Stage2: 自然言語指示をローカルLLM(Ollama)が解釈
