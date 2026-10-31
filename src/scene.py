@@ -105,12 +105,18 @@ def build_scene(show_viewer: bool = True, enable_record_camera: bool = True):
     return scene, franka, cube, record_cam
 
 
-def build_scene_multi(show_viewer: bool = True, enable_record_camera: bool = True, seed: int | None = None):
-    """赤・青・緑のキューブ3個(位置ランダム)とFranka Pandaを配置する(Stage2用)。
+def build_scene_multi(
+    show_viewer: bool = True,
+    enable_record_camera: bool = True,
+    enable_perception_camera: bool = False,
+    seed: int | None = None,
+):
+    """赤・青・緑のキューブ3個(位置ランダム)とFranka Pandaを配置する(Stage2/3用)。
 
     Returns:
-        scene, franka, cubes, record_cam
+        scene, franka, cubes, record_cam, perception_cam
         cubes: {"red": entity, "blue": entity, "green": entity}
+        perception_cam: enable_perception_camera=Falseの場合はNone
     """
     rng = random.Random(seed)
 
@@ -155,6 +161,17 @@ def build_scene_multi(show_viewer: bool = True, enable_record_camera: bool = Tru
             GUI=False,
         )
 
+    perception_cam = None
+    if enable_perception_camera:
+        # 机をほぼ真上から見下ろす固定カメラ。キューブ検出・位置推定専用。
+        perception_cam = scene.add_camera(
+            res=(640, 480),
+            pos=(0.5, 0.0, 1.1),
+            lookat=(0.5, 0.0, 0.0),
+            fov=50,
+            GUI=False,
+        )
+
     scene.build()
 
     franka.set_dofs_kp(
@@ -171,4 +188,4 @@ def build_scene_multi(show_viewer: bool = True, enable_record_camera: bool = Tru
     franka.set_qpos(READY_QPOS)
     scene.step()
 
-    return scene, franka, cubes, record_cam
+    return scene, franka, cubes, record_cam, perception_cam
