@@ -104,7 +104,7 @@ outputs/           # 動画・ログ（.gitignoreで大きなファイルは除�
 
 ## 動画
 
-（提出用動画のURLをここに記載）
+　[　https://youtu.be/74k_8wUN84I　]
 
 ## 個人情報について
 

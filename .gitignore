@@ -6,3 +6,5 @@ outputs/*.mp4
 outputs/*.log
 outputs/*.csv
 outputs/video_parts/segments/
+*.xlsx
+~$*
